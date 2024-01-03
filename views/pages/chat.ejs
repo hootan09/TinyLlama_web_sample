@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <%- include('../partials/head'); %>
+</head>
+
+<body class="container">
+
+    <header>
+        <%- include('../partials/header', {variant: 'V1.0' }); %>
+    </header>
+
+    <main>
+        <!-- component -->
+        <div class="max-w-4xl mx-auto p-4" dir="ltr">
+            <!-- Chat Container -->
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <!-- Chat Header -->
+                <div class="flex items-center mb-4">
+                    <div class="ml-3">
+                        <p class="text-xl font-medium">Your AI Assistant</p>
+                        <p id="onlineFlag" class="text-red-500">Online</p>
+                        <!-- <div class="flex-row content-center">
+                            <div class="w-4 h-4 bg-green-600 rounded-full"/>
+                        </div> -->
+                    </div>
+                </div>
+
+                <!-- Chat Messages -->
+                <div class="space-y-4" id="chatDiv">
+
+                    <div class="flex items-end justify-end">
+                        <div class="bg-blue-500 p-3 rounded-lg">
+                            <p class="text-sm text-white">Hello! How can I help you today?</p>
+                        </div>
+                        <img src="images/Z66vixO-_normal.jpg" alt="Other User Avatar"
+                            class="w-8 h-8 rounded-full ml-3" />
+                    </div>
+
+                    <!-- Sent Message -->
+                    <!-- <div class="flex items-end justify-end">
+                        <div class="bg-blue-500 p-3 rounded-lg">
+                            <p class="text-sm text-white">Sure, I have a question.</p>
+                        </div>
+                        <img src="images/Z66vixO-_normal.jpg" alt="Other User Avatar"
+                            class="w-8 h-8 rounded-full ml-3" />
+                    </div> -->
+
+                </div>
+
+                <!-- Chat Input -->
+                <div class="mt-4 flex items-center pb-2">
+                    <input id="chatInput" type="text" placeholder="Type your message..."
+                        class="flex-1 py-2 px-3 rounded-full bg-gray-100 focus:outline-none" />
+                    <button onclick="sendWsCall()"
+                        class="bg-blue-500 text-white px-4 py-2 rounded-full ml-3 hover:bg-blue-600">Send</button>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <footer>
+        <%- include('../partials/footer'); %>
+    </footer>
+
+    <script>
+
+        let requestCount = 0;
+        const changeOnlineColor = (stat) => {
+            if(stat){
+                document.getElementById("onlineFlag").classList.remove("text-red-500");
+                document.getElementById("onlineFlag").classList.add("text-green-500");
+            }else{
+                document.getElementById("onlineFlag").classList.remove("text-green-500");
+                document.getElementById("onlineFlag").classList.add("text-red-500");
+            }
+        }
+
+        let input = document.getElementById("chatInput");
+        input.addEventListener("keypress", async (event) => {
+            // If the user presses the "Enter" key on the keyboard
+            if (event.key === "Enter") {
+                // Cancel the default action, if needed
+                event.preventDefault();
+                // Trigger the button element with a click
+                // document.getElementById("myBtn").click();
+                // await send()
+                await sendWsCall();
+            }
+        })
+
+        //single api call
+        const sendSingleApiCall = async () => {
+            const text = document.getElementById("chatInput").value;
+            if(text ==""){
+                return;
+            }
+            addHtml(`                    
+            <div class="flex items-start">
+                    <img src="images/user.jpg" alt="Other User Avatar" class="w-8 h-8 rounded-full ml-3" />
+                    <div class="ml-3 bg-gray-100 p-3 rounded-lg">
+                        <p class="text-sm text-gray-800">${text}</p>
+                    </div>
+                </div>
+            `)
+            document.getElementById("chatInput").value = "";
+            const res = await fetch(`/askchat?text=${text}`, { method: 'GET' });
+            const result = await res.text();
+            // console.log(text, result);
+
+           markdowned = await new marked.Marked({async: true})
+            .use(markedCodeFormat({ plugins: prettierPlugins }))
+            .parse(result)
+
+            addHtml(`
+            <div class="flex items-end justify-end">
+                <div class="bg-blue-500 p-3 rounded-lg">
+                    <md-span class="text-sm text-white">${markdowned}</md-span>
+                </div>
+                <img src="images/Z66vixO-_normal.jpg" alt="Other User Avatar" class="w-8 h-8 rounded-full ml-3" />
+            </div>
+            `)
+
+        }
+
+        let socket = new WebSocket(`${location.protocol == 'http:' ? 'ws': 'wss'}://${location.host}/streamChat`);
+
+        socket.onopen = (e) => {
+            console.log("[open] Connection established");
+            changeOnlineColor(true);
+        };
+
+        socket.onmessage = async(event) => {
+            // console.log(`[message] Data received from server: ${event.data}`);
+            markdowned = await new marked.Marked({async: true})
+            .use(markedCodeFormat({ plugins: prettierPlugins }))
+            .parse(event.data)
+
+            if (document.getElementById(`${requestCount}`)) {
+                document.getElementById(`${requestCount}`).innerHTML = `
+                    <div class="bg-blue-500 p-3 rounded-lg">
+                        <md-span class="text-sm text-white">${markdowned}</md-span>
+                    </div>
+                    <img src="images/Z66vixO-_normal.jpg" alt="Other User Avatar" class="w-8 h-8 rounded-full ml-3" />
+                `;          
+            } else {
+                addHtml(`
+                <div id="${requestCount}" class="flex items-end justify-end">
+                    <div class="bg-blue-500 p-3 rounded-lg">
+                        <md-span class="text-sm text-white">${markdowned}</md-span>
+                    </div>
+                    <img src="images/Z66vixO-_normal.jpg" alt="Other User Avatar" class="w-8 h-8 rounded-full ml-3" />
+                </div>
+                `)
+            }
+
+        };
+
+        socket.onclose = (event) => {
+            changeOnlineColor(false);
+            if (event.wasClean) {
+                console.log(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
+            } else {
+                // e.g. server process killed or network down
+                // event.code is usually 1006 in this case
+                console.log('[close] Connection died');
+            }
+        };
+
+        socket.onerror = function(error) {
+            changeOnlineColor(false);
+            console.log(`[error]`);
+        };
+
+
+        //send via ws and stream response
+        const sendWsCall = async () => {
+            requestCount +=1;
+            const text = document.getElementById("chatInput").value;
+            if(text ==""){
+                return;
+            }
+            addHtml(`                    
+            <div class="flex items-start">
+                    <img src="images/user.jpg" alt="Other User Avatar" class="w-8 h-8 rounded-full ml-3" />
+                    <div class="ml-3 bg-gray-100 p-3 rounded-lg">
+                        <p class="text-sm text-gray-800">${text}</p>
+                    </div>
+                </div>
+            `)
+            document.getElementById("chatInput").value = "";
+            
+            if(socket){
+                socket.send(text)
+            }
+    }
+
+    const addHtml = (data) => {
+        document.getElementById("chatDiv").insertAdjacentHTML("beforeend", data);
+    }
+
+    </script>
+
+
+</body>
+
+</html>
