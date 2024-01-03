@@ -1,10 +1,10 @@
-### TinyLlama Nodejs-web(ejs) Streaming sample
+### TinyLlama Nodejs-Web(ejs) Streaming Sample
 
-#### Used transformersJs and ONNX for loading models
+###### Used transformersJs and ONNX for loading models
 
-##### Model: **Xenova/TinyLlama-1.1B-Chat-v1.0 (from HuggingFace)**
+###### Model: **Xenova/TinyLlama-1.1B-Chat-v1.0 (from HuggingFace)**
 
-###### Install and run:
+###### Install and Run:
 
 ```sh
 $ npm install
