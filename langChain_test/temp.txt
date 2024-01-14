@@ -1,0 +1,3 @@
+https://huggingface.co/Xenova/all-MiniLM-L6-v2
+https://js.langchain.com/docs/integrations/text_embedding/transformers
+https://js.langchain.com/docs/use_cases/question_answering/

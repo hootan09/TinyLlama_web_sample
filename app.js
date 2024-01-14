@@ -1,4 +1,4 @@
-const { removeWordsFromStartAndAfter } = require('./utils/utils');
+const { removeWordsFromStartAndAfter, embedQuery } = require('./utils/utils');
 const express = require('express');
 const app = express();
 const expressWs = require('express-ws')(app);
@@ -103,7 +103,14 @@ app.ws('/streamChat', async(ws, req) => {
             }
         });
     });
-  });
+});
+
+app.get('/embeding/:text', async(req,res)=> {
+    let {text} = req.params;
+    // console.log(text);
+    let result = await embedQuery(text);
+    res.send(JSON.stringify({result: result}));
+})
 
 
 
