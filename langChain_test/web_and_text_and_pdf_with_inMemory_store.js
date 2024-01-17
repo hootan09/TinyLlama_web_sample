@@ -23,7 +23,7 @@ const { removeWordsFromStartAndAfter } = require('../utils/utils');
 
     let { RecursiveCharacterTextSplitter } = await  import("langchain/text_splitter");
     const textSplitter = new RecursiveCharacterTextSplitter({
-    chunkSize: 500,
+    chunkSize: 1024,//500
     chunkOverlap: 0,
     });
 
@@ -53,13 +53,10 @@ const { removeWordsFromStartAndAfter } = require('../utils/utils');
     
     // console.log(context);
 
-    const template = `You are a friendly assistant.Use the following data to answer the question at the end.
-    If you don't know the answer, just say that you don't know, don't try to make up an answer.
-    keep the answer as concise as possible.
-    data is:${context}`;
+    const template = `You are a friendly assistant.Use the following context to answer the question.
+    Don't try to make up an answer.keep the answer selected from context.
+    context is:\n${context}`;
   //  console.log(template);
-
-
 
   class MyClassificationPipeline {
     static task = 'text-generation';
@@ -86,7 +83,7 @@ const { removeWordsFromStartAndAfter } = require('../utils/utils');
 
   // Define the list of messages
   const messages = [
-    { "role": "system", "content": context },
+    { "role": "system", "content": template },
     { "role": "user", "content": question },
 ]
 
@@ -97,12 +94,14 @@ const prompt = model.tokenizer.apply_chat_template(messages, {
 
 // Generate a response
 const result = await model(prompt, {
-    max_new_tokens: 256,
-    temperature: 0.7,
-    do_sample: true,
-    top_k: 50,
+    max_new_tokens: 128,//256
+    temperature: 0.85,//0.7
+    do_sample: false,
+    top_k: 70,//50
     callback_function: async(x) => {
         let chunked = model.tokenizer.decode(x[0].output_token_ids, { skip_special_tokens: true })
+        console.clear();
+        console.log(`Question: ${question}\n`);
         console.log(removeWordsFromStartAndAfter(chunked, '<|assistant|>\n'));
     }
 });
