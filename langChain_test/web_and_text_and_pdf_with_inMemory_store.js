@@ -46,6 +46,7 @@ const { removeWordsFromStartAndAfter } = require('../utils/utils');
     );
 
     let question = "what skills mohammad nikravesh have?";
+    // let question = "what work experiences mohammad nikravesh have?";
     const relevantDocs = await vectorStore.similaritySearch(question, 3);
     // console.log(relevantDocs.length);
     // console.log(relevantDocs[0]);
@@ -54,7 +55,7 @@ const { removeWordsFromStartAndAfter } = require('../utils/utils');
     // console.log(context);
 
     const template = `You are a friendly assistant.Use the following context to answer the question.
-    Don't try to make up an answer.keep the answer selected from context.
+    Don't try to make up an answer.Don't repeat answer.keep the answer selected from context.
     context is:\n${context}`;
   //  console.log(template);
 
@@ -95,9 +96,9 @@ const prompt = model.tokenizer.apply_chat_template(messages, {
 // Generate a response
 const result = await model(prompt, {
     max_new_tokens: 128,//256
-    temperature: 0.85,//0.7
-    do_sample: false,
-    top_k: 70,//50
+    temperature: 0.4,//0.7
+    do_sample: true,
+    top_k: 50,
     callback_function: async(x) => {
         let chunked = model.tokenizer.decode(x[0].output_token_ids, { skip_special_tokens: true })
         console.clear();
