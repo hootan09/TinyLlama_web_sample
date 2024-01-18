@@ -45,19 +45,23 @@ const { removeWordsFromStartAndAfter } = require('../utils/utils');
         embeddings
     );
 
-    // let question = "what skills mohammad nikravesh have?";
-    let question = "what work experiences mohammad nikravesh have?";
+    let question = "what skills mohammad nikravesh have?";
+    // let question = "what work experiences mohammad nikravesh have?";
     const relevantDocs = await vectorStore.similaritySearch(question, 3);
     // console.log(relevantDocs.length);
     // console.log(relevantDocs[0]);
-    let context = relevantDocs.map((item) => item?.pageContent).join('\n');
+    let context = relevantDocs.map((item) => item?.pageContent).join('');
     
     // console.log(context);
 
-    const template = `You are a friendly assistant.Use the following context to answer the question.
-    Don't try to make up an answer.Don't repeat answer.keep the answer accurate and selected from context.
-    context:\n${context}`;
-  //  console.log(template);
+    const template = `You are a friendly assistant.`;
+    let content = `Answer the question based on following context.
+    Keep the answer short and concise.
+    Context: ${context}.
+    Question: ${question}
+    Answer:
+    `
+
 
   class MyClassificationPipeline {
     static task = 'text-generation';
@@ -85,7 +89,7 @@ const { removeWordsFromStartAndAfter } = require('../utils/utils');
   // Define the list of messages
   const messages = [
     { "role": "system", "content": template },
-    { "role": "user", "content": question },
+    { "role": "user", "content": content },
 ]
 
 // Construct the prompt
@@ -96,8 +100,8 @@ const prompt = model.tokenizer.apply_chat_template(messages, {
 // Generate a response
 const result = await model(prompt, {
     max_new_tokens: 128,//256
-    temperature: 0.4,//0.7
-    do_sample: true,
+    temperature: 0.7,
+    do_sample: false,//true,
     top_k: 50,
     callback_function: async(x) => {
         let chunked = model.tokenizer.decode(x[0].output_token_ids, { skip_special_tokens: true })
