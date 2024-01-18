@@ -45,8 +45,8 @@ const { removeWordsFromStartAndAfter } = require('../utils/utils');
         embeddings
     );
 
-    let question = "what skills mohammad nikravesh have?";
-    // let question = "what work experiences mohammad nikravesh have?";
+    // let question = "what skills mohammad nikravesh have?";
+    let question = "what work experiences mohammad nikravesh have?";
     const relevantDocs = await vectorStore.similaritySearch(question, 3);
     // console.log(relevantDocs.length);
     // console.log(relevantDocs[0]);
@@ -55,8 +55,8 @@ const { removeWordsFromStartAndAfter } = require('../utils/utils');
     // console.log(context);
 
     const template = `You are a friendly assistant.Use the following context to answer the question.
-    Don't try to make up an answer.Don't repeat answer.keep the answer selected from context.
-    context is:\n${context}`;
+    Don't try to make up an answer.Don't repeat answer.keep the answer accurate and selected from context.
+    context:\n${context}`;
   //  console.log(template);
 
   class MyClassificationPipeline {
